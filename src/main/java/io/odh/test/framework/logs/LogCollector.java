@@ -4,12 +4,14 @@
  */
 package io.odh.test.framework.logs;
 
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.odh.test.Environment;
 import io.odh.test.OdhConstants;
 import io.odh.test.TestConstants;
 import io.odh.test.TestUtils;
+import io.odh.test.framework.manager.ResourceItem;
 import io.odh.test.framework.manager.ResourceManager;
 import io.odh.test.platform.KubeClient;
 import io.odh.test.platform.cmdClient.KubeCmdClient;
@@ -97,6 +99,24 @@ public class LogCollector {
         }
     }
 
+    private static <T extends HasMetadata> void writeResource(Path logpath, ResourceItem<T> resourceItem) {
+        String name = resourceItem.getResource().getMetadata().getName();
+        String namespace = resourceItem.getResource().getMetadata().getNamespace();
+        String kind = resourceItem.getResource().getKind();
+        try {
+            Files.createDirectories(logpath.resolve(namespace));
+        } catch (IOException e) {
+            LOGGER.warn("Cannot create logdir in {}", logpath);
+        }
+        try {
+            LOGGER.debug("Get description of {} {}/{}", kind, namespace, name);
+            Files.writeString(logpath.resolve(namespace).resolve(kind + "-" + name + ".describe.log"),
+                    ResourceManager.getKubeCmdClient().namespace(namespace).describe(kind, name));
+        } catch (Exception e) {
+            LOGGER.warn("Cannot get description of {} {}/{}", kind, namespace, name);
+        }
+    }
+
     private static void saveClusterState(Path logpath) throws IOException {
         KubeClient kube = ResourceManager.getKubeClient();
         KubeCmdClient cmdClient = ResourceManager.getKubeCmdClient();
@@ -121,5 +141,15 @@ public class LogCollector {
             LOGGER.debug("Listing deployments in {}", ns.getMetadata().getName());
             kube.getClient().apps().deployments().inNamespace(ns.getMetadata().getName()).list().getItems().forEach(d -> writeDeployments(logpath, d));
         });
+
+        LOGGER.debug("Listing misc resources in {}", "xx");
+
+        for (ResourceItem resource: ResourceManager.getInstance().CLASS_RESOURCE_STACK) {
+            writeResource(logpath, resource);
+        }
+
+        for (ResourceItem resource: ResourceManager.getInstance().METHOD_RESOURCE_STACK) {
+            writeResource(logpath, resource);
+        }
     }
 }

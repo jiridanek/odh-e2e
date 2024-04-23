@@ -44,10 +44,10 @@ public class ResourceManager {
     private static KubeClient client;
     private static KubeCmdClient kubeCmdClient;
 
-    static final Stack<ResourceItem> CLASS_RESOURCE_STACK = new Stack<>();
-    static final Stack<ResourceItem> METHOD_RESOURCE_STACK = new Stack<>();
+    public static final Stack<ResourceItem<? extends HasMetadata>> CLASS_RESOURCE_STACK = new Stack<>();
+    public static final Stack<ResourceItem<? extends HasMetadata>> METHOD_RESOURCE_STACK = new Stack<>();
 
-    static Stack<ResourceItem> resourceStackPointer = CLASS_RESOURCE_STACK;
+    static Stack<ResourceItem<? extends HasMetadata>> resourceStackPointer = CLASS_RESOURCE_STACK;
 
     static List<String> defaultNamespacesForLogCollect = Arrays.asList(
         "openshift-marketplace",
@@ -74,7 +74,7 @@ public class ResourceManager {
         return kubeCmdClient;
     }
 
-    private final ResourceType<?>[] resourceTypes = new ResourceType[]{
+    private final ResourceType<? extends HasMetadata>[] resourceTypes = new ResourceType<?>[]{
         new NamespaceResource(),
         new SubscriptionResource(),
         new OperatorGroupResource(),
@@ -96,7 +96,7 @@ public class ResourceManager {
         NamespaceResource.labelNamespace(namespace, TestConstants.LOG_COLLECT_LABEL, "true");
     }
 
-    public final void pushToStack(ResourceItem item) {
+    public final void pushToStack(ResourceItem<? extends HasMetadata> item) {
         resourceStackPointer.push(item);
     }
 
