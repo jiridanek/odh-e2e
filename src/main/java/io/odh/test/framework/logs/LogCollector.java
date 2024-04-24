@@ -144,11 +144,11 @@ public class LogCollector {
 
         LOGGER.debug("Listing misc resources in {}", "xx");
 
-        for (ResourceItem resource: ResourceManager.getInstance().CLASS_RESOURCE_STACK) {
+        for (ResourceItem<?> resource: ResourceManager.CLASS_RESOURCE_STACK) {
             writeResource(logpath, resource);
         }
 
-        for (ResourceItem resource: ResourceManager.getInstance().METHOD_RESOURCE_STACK) {
+        for (ResourceItem<?> resource: ResourceManager.METHOD_RESOURCE_STACK) {
             writeResource(logpath, resource);
         }
     }

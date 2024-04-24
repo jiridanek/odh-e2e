@@ -251,7 +251,7 @@ public class ResourceManager {
 
             while (!resourceStackPointer.empty()) {
                 try {
-                    ResourceItem resourceItem = resourceStackPointer.pop();
+                    ResourceItem<?> resourceItem = resourceStackPointer.pop();
                     resourceItem.getThrowableRunner().run();
                 } catch (Exception e) {
                     e.printStackTrace();
