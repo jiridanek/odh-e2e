@@ -100,9 +100,16 @@ public class LogCollector {
     }
 
     private static <T extends HasMetadata> void writeResource(Path logpath, ResourceItem<T> resourceItem) {
-        String name = resourceItem.getResource().getMetadata().getName();
-        String namespace = resourceItem.getResource().getMetadata().getNamespace();
-        String kind = resourceItem.getResource().getKind();
+        // ResourceItem may only have deleter function and not hold any actual resource
+        final T resource = resourceItem.getResource();
+        if (resource == null) {
+            return;
+        }
+
+        final String name = resource.getMetadata().getName();
+        final String namespace = resource.getMetadata().getNamespace();
+        final String kind = resource.getKind();
+
         try {
             Files.createDirectories(logpath.resolve(namespace));
         } catch (IOException e) {
