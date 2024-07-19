@@ -21,7 +21,7 @@ import java.util.Map;
 public class PipelinesOperator {
     private static final Logger LOGGER = LoggerFactory.getLogger(PipelinesOperator.class);
 
-    public static final String SUBSCRIPTION_NAME = "openshift-pipelines-operator";
+    public static final String SUBSCRIPTION_NAME = "openshift-pipelines-operator-rh";
     public static final String OPERATOR_NAME = "openshift-pipelines-operator-rh";
 
     public static void deployOperator() {
