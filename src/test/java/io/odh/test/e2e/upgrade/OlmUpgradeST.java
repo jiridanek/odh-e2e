@@ -4,16 +4,22 @@
  */
 package io.odh.test.e2e.upgrade;
 
+import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.LabelSelector;
 import io.fabric8.kubernetes.api.model.LabelSelectorBuilder;
+import io.fabric8.kubernetes.api.model.Namespace;
+import io.fabric8.kubernetes.api.model.NamespaceBuilder;
+import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.openshift.api.model.operatorhub.v1alpha1.InstallPlan;
 import io.odh.test.Environment;
+import io.odh.test.OdhAnnotationsLabels;
 import io.odh.test.OdhConstants;
 import io.odh.test.TestSuite;
 import io.odh.test.TestUtils;
 import io.odh.test.install.OlmInstall;
 import io.odh.test.utils.DeploymentUtils;
 import io.odh.test.utils.UpgradeUtils;
+import io.qameta.allure.Allure;
 import io.skodjob.annotations.Contact;
 import io.skodjob.annotations.Desc;
 import io.skodjob.annotations.Step;
@@ -23,13 +29,16 @@ import io.skodjob.annotations.Label;
 import io.skodjob.testframe.resources.KubeResourceManager;
 import io.skodjob.testframe.utils.KubeUtils;
 import io.skodjob.testframe.utils.PodUtils;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.kubeflow.v1.Notebook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 @SuiteDoc(
@@ -70,8 +79,9 @@ public class OlmUpgradeST extends UpgradeAbstract {
     )
     @Test
     void testUpgradeOlm() throws IOException, InterruptedException {
-        String ntbName = "test-odh-notebook";
-        String ntbNamespace = "test-odh-notebook-upgrade";
+        final String ntbNamePre = "test-odh-notebook-pre";
+        final String ntbNamePost = "test-odh-notebook-post";
+        final String ntbNamespace = "test-odh-notebook-upgrade";
 
         OlmInstall olmInstall = new OlmInstall();
         olmInstall.setApproval("Manual");
@@ -90,13 +100,27 @@ public class OlmUpgradeST extends UpgradeAbstract {
 
         // Deploy DSC
         deployDsc(DS_PROJECT_NAME);
-        deployNotebook(ntbNamespace, ntbName);
 
-        LabelSelector lblSelector = new LabelSelectorBuilder()
-                .withMatchLabels(Map.of("app", ntbName))
+        Allure.step("Deploy notebook before upgrade");
+        Namespace ns = new NamespaceBuilder()
+                .withNewMetadata()
+                .withName(ntbNamespace)
+                .addToLabels(OdhAnnotationsLabels.LABEL_DASHBOARD, "true")
+                .addToAnnotations(OdhAnnotationsLabels.ANNO_SERVICE_MESH, "false")
+                .endMetadata()
+                .build();
+        KubeResourceManager.getInstance().createResourceWithoutWait(ns);
+
+        deployNotebook(ntbNamespace, ntbNamePre);
+
+        LabelSelector lblSelectorPre = new LabelSelectorBuilder()
+                .withMatchLabels(Map.of("app", ntbNamePre))
                 .build();
 
-        PodUtils.waitForPodsReady(ntbNamespace, lblSelector, 1, true, () -> { });
+        PodUtils.waitForPodsReady(ntbNamespace, lblSelectorPre, 1, true, () -> { });
+        List<Pod> ntbPodsPre =  KubeResourceManager.getKubeClient().getClient().pods()
+                .inNamespace(ntbNamespace).withLabelSelector(lblSelectorPre).list().getItems();
+        Assertions.assertEquals(1, ntbPodsPre.size());
 
         LOGGER.info("Upgrade to next available version in OLM catalog");
         // Approve upgrade to newer version
@@ -113,8 +137,34 @@ public class OlmUpgradeST extends UpgradeAbstract {
         Date operatorLogCheckTimestamp = new Date();
 
         // Verify that NTB pods are stable
-        PodUtils.waitForPodsReady(ntbNamespace, lblSelector, 1, true, () -> { });
+        PodUtils.waitForPodsReady(ntbNamespace, lblSelectorPre, 1, true, () -> { });
         // Check logs in operator pod
         UpgradeUtils.deploymentLogIsErrorEmpty(olmInstall.getNamespace(), olmInstall.getDeploymentName(), operatorLogCheckTimestamp);
+
+        // RHOAIENG-10827: creating new notebooks after upgrade restarted existing notebooks
+        Allure.step("Deploy another notebook after upgrade");
+        deployNotebook(ntbNamespace, ntbNamePost);
+
+        LabelSelector lblSelectorPost = new LabelSelectorBuilder()
+                .withMatchLabels(Map.of("app", ntbNamePost))
+                .build();
+        PodUtils.waitForPodsReady(ntbNamespace, lblSelectorPost, 1, true, () -> { });
+
+        // Verify that old notebook pod is running
+        PodUtils.waitForPodsReady(ntbNamespace, lblSelectorPre, 1, true, () -> { });
+        // and
+        List<Pod> ntbPodsPreAfter = KubeResourceManager.getKubeClient().getClient().pods()
+                .inNamespace(ntbNamespace).withLabelSelector(lblSelectorPre).list().getItems();
+        Assertions.assertEquals(1, ntbPodsPreAfter.size());
+        // has not been restarted
+        for (ContainerStatus containerStatus : ntbPodsPreAfter.get(0).getStatus().getContainerStatuses()) {
+            Assertions.assertEquals(0, containerStatus.getRestartCount(), containerStatus.toString());
+        }
+        // nor recreated
+        Assertions.assertEquals(ntbPodsPre.get(0).getMetadata().getUid(), ntbPodsPreAfter.get(0).getMetadata().getUid());
+
+        // Verify that old notebook has not been modified
+        Notebook ntbResource = KubeResourceManager.getKubeClient().getClient().resources(Notebook.class).inNamespace(ntbNamespace).withName(ntbNamePre).get();
+        Assertions.assertEquals("1", ntbResource.getMetadata().getResourceVersion());
     }
 }
