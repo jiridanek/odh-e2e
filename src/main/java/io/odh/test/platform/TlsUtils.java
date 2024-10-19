@@ -26,16 +26,18 @@ import java.util.regex.Pattern;
 public class TlsUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(TlsUtils.class);
 
+    // secrets data are base64-encoded (and the X.509 certs inside are themselves base64-encoded again)
     public static SSLContext getSSLContextFromSecret(Secret signingKey) throws Exception {
-        String caSecret = signingKey.getData().get("tls.crt");
-        return createSslContext(caSecret);
+        final Base64.Decoder decoder = Base64.getMimeDecoder();
+        String base64EncodedPems = signingKey.getData().get("tls.crt");
+        String pems = new String(decoder.decode(base64EncodedPems));
+        return createSslContext(pems);
     }
 
-    private static SSLContext createSslContext(String base64EncodedPems) throws Exception {
-        Base64.Decoder decoder = Base64.getMimeDecoder();
-        String pem = new String(decoder.decode(base64EncodedPems));
+    private static SSLContext createSslContext(String pems) throws Exception {
+        final Base64.Decoder decoder = Base64.getMimeDecoder();
         Pattern parse = Pattern.compile("(?m)(?s)^---*BEGIN ([^-]+)---*$([^-]+)^---*END[^-]+-+$");
-        Matcher m = parse.matcher(pem);
+        Matcher m = parse.matcher(pems);
         CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
         List<Certificate> certList = new ArrayList<>();
 
