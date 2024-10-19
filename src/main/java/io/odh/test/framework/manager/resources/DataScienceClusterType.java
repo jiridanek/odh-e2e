@@ -14,6 +14,8 @@ import io.odh.test.OdhConstants;
 import io.odh.test.TestConstants;
 import io.odh.test.TestUtils;
 import io.opendatahub.datasciencecluster.v1.DataScienceCluster;
+import io.opendatahub.datasciencecluster.v1.datascienceclusterspec.components.Dashboard;
+import io.opendatahub.datasciencecluster.v1.datascienceclusterspec.components.Workbenches;
 import io.skodjob.testframe.interfaces.ResourceType;
 import io.skodjob.testframe.resources.KubeResourceManager;
 import io.skodjob.testframe.utils.PodUtils;
@@ -73,17 +75,21 @@ public class DataScienceClusterType implements ResourceType<DataScienceCluster> 
     public boolean isReady(DataScienceCluster resource) {
         String message = String.format("DataScienceCluster %s readiness", resource.getMetadata().getName());
         Wait.until(message, TestConstants.GLOBAL_POLL_INTERVAL_SHORT, TestConstants.GLOBAL_TIMEOUT, () -> {
-            boolean dscReady;
+            boolean dscReady = true;
 
             DataScienceCluster dsc = dataScienceCLusterClient().withName(resource.getMetadata().getName()).get();
 
-            String dashboardStatus = TestUtils.getDscConditionByType(dsc.getStatus().getConditions(), "dashboardReady").getStatus();
-            LOGGER.debug("DataScienceCluster {} Dashboard status: {}", resource.getMetadata().getName(), dashboardStatus);
-            dscReady = dashboardStatus.equals("True");
+            if (resource.getSpec().getComponents().getDashboard().getManagementState() == Dashboard.ManagementState.Managed) {
+                String dashboardStatus = TestUtils.getDscConditionByType(dsc.getStatus().getConditions(), "dashboardReady").getStatus();
+                LOGGER.debug("DataScienceCluster {} Dashboard status: {}", resource.getMetadata().getName(), dashboardStatus);
+                dscReady = dscReady && dashboardStatus.equals("True");
+            }
 
-            String workbenchesStatus = TestUtils.getDscConditionByType(dsc.getStatus().getConditions(), "workbenchesReady").getStatus();
-            LOGGER.debug("DataScienceCluster {} Workbenches status: {}", resource.getMetadata().getName(), workbenchesStatus);
-            dscReady = dscReady && workbenchesStatus.equals("True");
+            if (resource.getSpec().getComponents().getWorkbenches().getManagementState() == Workbenches.ManagementState.Managed) {
+                String workbenchesStatus = TestUtils.getDscConditionByType(dsc.getStatus().getConditions(), "workbenchesReady").getStatus();
+                LOGGER.debug("DataScienceCluster {} Workbenches status: {}", resource.getMetadata().getName(), workbenchesStatus);
+                dscReady = dscReady && workbenchesStatus.equals("True");
+            }
 
             // TODO uncomment once https://issues.redhat.com/browse/RHOAIENG-416 is fixed
 //            // Wait for CodeFlare
