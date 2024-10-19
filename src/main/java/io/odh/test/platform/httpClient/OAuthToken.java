@@ -1,6 +1,14 @@
+/*
+ * Copyright Skodjob authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ */
 package io.odh.test.platform.httpClient;
 
-import io.fabric8.openshift.api.model.*;
+import io.fabric8.openshift.api.model.OAuthAccessToken;
+import io.fabric8.openshift.api.model.OAuthAccessTokenBuilder;
+import io.fabric8.openshift.api.model.OAuthClient;
+import io.fabric8.openshift.api.model.OAuthClientBuilder;
+import io.fabric8.openshift.api.model.User;
 import io.skodjob.testframe.resources.KubeResourceManager;
 
 import java.nio.charset.StandardCharsets;
