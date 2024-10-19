@@ -145,25 +145,7 @@ public class NotebookST extends StandardAbstract {
                             new WorkbenchesBuilder().withManagementState(Workbenches.ManagementState.Managed).build()
                         )
                         .withDashboard(
-                            new DashboardBuilder().withManagementState(Dashboard.ManagementState.Managed).build()
-                        )
-                        .withKserve(
-                            new KserveBuilder().withManagementState(Kserve.ManagementState.Managed).build()
-                        )
-                        .withKueue(
-                            new KueueBuilder().withManagementState(Kueue.ManagementState.Managed).build()
-                        )
-                        .withCodeflare(
-                            new CodeflareBuilder().withManagementState(Codeflare.ManagementState.Managed).build()
-                        )
-                        .withDatasciencepipelines(
-                            new DatasciencepipelinesBuilder().withManagementState(Datasciencepipelines.ManagementState.Managed).build()
-                        )
-                        .withModelmeshserving(
-                            new ModelmeshservingBuilder().withManagementState(Modelmeshserving.ManagementState.Managed).build()
-                        )
-                        .withRay(
-                            new RayBuilder().withManagementState(Ray.ManagementState.Managed).build()
+                            new DashboardBuilder().withManagementState(Environment.SKIP_DEPLOY_DASHBOARD ? Dashboard.ManagementState.Removed : Dashboard.ManagementState.Managed).build()
                         )
                         .build())
                 .endSpec()

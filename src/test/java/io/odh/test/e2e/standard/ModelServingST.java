@@ -30,6 +30,9 @@ import io.odh.test.OdhConstants;
 import io.odh.test.TestUtils;
 import io.odh.test.utils.DscUtils;
 import io.opendatahub.datasciencecluster.v1.DataScienceCluster;
+import io.opendatahub.datasciencecluster.v1.DataScienceClusterBuilder;
+import io.opendatahub.datasciencecluster.v1.datascienceclusterspec.ComponentsBuilder;
+import io.opendatahub.datasciencecluster.v1.datascienceclusterspec.components.*;
 import io.opendatahub.dscinitialization.v1.DSCInitialization;
 import io.skodjob.annotations.Contact;
 import io.skodjob.annotations.Desc;
@@ -102,7 +105,25 @@ public class ModelServingST extends StandardAbstract {
         // Create DSCI
         DSCInitialization dsci = DscUtils.getBasicDSCI();
         // Create DSC
-        DataScienceCluster dsc = DscUtils.getBasicDSC(DS_PROJECT_NAME);
+        DataScienceCluster dsc = new DataScienceClusterBuilder()
+                .withNewMetadata()
+                .withName(DS_PROJECT_NAME)
+                .endMetadata()
+                .withNewSpec()
+                .withComponents(
+                        new ComponentsBuilder()
+                                .withDashboard(
+                                        new DashboardBuilder().withManagementState(Environment.SKIP_DEPLOY_DASHBOARD ? Dashboard.ManagementState.Removed : Dashboard.ManagementState.Managed).build()
+                                )
+                                .withKserve(
+                                        new KserveBuilder().withManagementState(Kserve.ManagementState.Managed).build()
+                                )
+                                .withModelmeshserving(
+                                        new ModelmeshservingBuilder().withManagementState(Modelmeshserving.ManagementState.Managed).build()
+                                )
+                                .build())
+                .endSpec()
+                .build();
 
         KubeResourceManager.getInstance().createOrUpdateResourceWithWait(dsci);
         KubeResourceManager.getInstance().createResourceWithWait(dsc);

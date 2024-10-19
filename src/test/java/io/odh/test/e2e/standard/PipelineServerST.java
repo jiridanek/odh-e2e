@@ -24,6 +24,9 @@ import io.odh.test.TestUtils;
 import io.odh.test.platform.KFPv1Client;
 import io.odh.test.utils.DscUtils;
 import io.opendatahub.datasciencecluster.v1.DataScienceCluster;
+import io.opendatahub.datasciencecluster.v1.DataScienceClusterBuilder;
+import io.opendatahub.datasciencecluster.v1.datascienceclusterspec.ComponentsBuilder;
+import io.opendatahub.datasciencecluster.v1.datascienceclusterspec.components.*;
 import io.opendatahub.datasciencepipelinesapplications.v1alpha1.DataSciencePipelinesApplication;
 import io.opendatahub.datasciencepipelinesapplications.v1alpha1.DataSciencePipelinesApplicationBuilder;
 import io.opendatahub.datasciencepipelinesapplications.v1alpha1.datasciencepipelinesapplicationspec.ApiServer;
@@ -82,7 +85,22 @@ public class PipelineServerST extends StandardAbstract {
         // Create DSCI
         DSCInitialization dsci = DscUtils.getBasicDSCI();
         // Create DSC
-        DataScienceCluster dsc = DscUtils.getBasicDSC(DS_PROJECT_NAME);
+        DataScienceCluster dsc = new DataScienceClusterBuilder()
+                .withNewMetadata()
+                .withName(DS_PROJECT_NAME)
+                .endMetadata()
+                .withNewSpec()
+                .withComponents(
+                        new ComponentsBuilder()
+                                .withDashboard(
+                                        new DashboardBuilder().withManagementState(Environment.SKIP_DEPLOY_DASHBOARD ? Dashboard.ManagementState.Removed : Dashboard.ManagementState.Managed).build()
+                                )
+                                .withDatasciencepipelines(
+                                        new DatasciencepipelinesBuilder().withManagementState(Datasciencepipelines.ManagementState.Managed).build()
+                                )
+                                .build())
+                .endSpec()
+                .build();
 
         KubeResourceManager.getInstance().createOrUpdateResourceWithWait(dsci);
         KubeResourceManager.getInstance().createResourceWithWait(dsc);

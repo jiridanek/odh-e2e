@@ -13,12 +13,7 @@ import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.apiextensions.v1.CustomResourceDefinition;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
-import io.fabric8.openshift.api.model.OAuthAccessToken;
-import io.fabric8.openshift.api.model.OAuthAccessTokenBuilder;
-import io.fabric8.openshift.api.model.OAuthClient;
-import io.fabric8.openshift.api.model.OAuthClientBuilder;
 import io.fabric8.openshift.api.model.Route;
-import io.fabric8.openshift.api.model.User;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.odh.test.Environment;
 import io.odh.test.OdhAnnotationsLabels;
@@ -30,6 +25,14 @@ import io.odh.test.platform.httpClient.OAuthToken;
 import io.odh.test.utils.CsvUtils;
 import io.odh.test.utils.DscUtils;
 import io.opendatahub.datasciencecluster.v1.DataScienceCluster;
+import io.opendatahub.datasciencecluster.v1.DataScienceClusterBuilder;
+import io.opendatahub.datasciencecluster.v1.datascienceclusterspec.ComponentsBuilder;
+import io.opendatahub.datasciencecluster.v1.datascienceclusterspec.components.Codeflare;
+import io.opendatahub.datasciencecluster.v1.datascienceclusterspec.components.CodeflareBuilder;
+import io.opendatahub.datasciencecluster.v1.datascienceclusterspec.components.Dashboard;
+import io.opendatahub.datasciencecluster.v1.datascienceclusterspec.components.DashboardBuilder;
+import io.opendatahub.datasciencecluster.v1.datascienceclusterspec.components.Kueue;
+import io.opendatahub.datasciencecluster.v1.datascienceclusterspec.components.KueueBuilder;
 import io.opendatahub.dscinitialization.v1.DSCInitialization;
 import io.qameta.allure.Allure;
 import io.ray.v1.RayCluster;
@@ -54,12 +57,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.http.HttpClient;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.util.Base64;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
@@ -102,7 +101,25 @@ public class DistributedST extends StandardAbstract {
         // Create DSCI
         DSCInitialization dsci = DscUtils.getBasicDSCI();
         // Create DSC
-        DataScienceCluster dsc = DscUtils.getBasicDSC(DS_PROJECT_NAME);
+        DataScienceCluster dsc = new DataScienceClusterBuilder()
+                .withNewMetadata()
+                .withName(DS_PROJECT_NAME)
+                .endMetadata()
+                .withNewSpec()
+                .withComponents(
+                        new ComponentsBuilder()
+                                .withDashboard(
+                                        new DashboardBuilder().withManagementState(Environment.SKIP_DEPLOY_DASHBOARD ? Dashboard.ManagementState.Removed : Dashboard.ManagementState.Managed).build()
+                                )
+                                .withKueue(
+                                        new KueueBuilder().withManagementState(Kueue.ManagementState.Managed).build()
+                                )
+                                .withCodeflare(
+                                        new CodeflareBuilder().withManagementState(Codeflare.ManagementState.Managed).build()
+                                )
+                                .build())
+                .endSpec()
+                .build();
 
         KubeResourceManager.getInstance().createOrUpdateResourceWithWait(dsci);
         KubeResourceManager.getInstance().createResourceWithWait(dsc);
