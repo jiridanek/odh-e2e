@@ -10,22 +10,7 @@ import io.odh.test.framework.manager.requirements.ServiceMeshOperator;
 import io.opendatahub.datasciencecluster.v1.DataScienceCluster;
 import io.opendatahub.datasciencecluster.v1.DataScienceClusterBuilder;
 import io.opendatahub.datasciencecluster.v1.datascienceclusterspec.ComponentsBuilder;
-import io.opendatahub.datasciencecluster.v1.datascienceclusterspec.components.Codeflare;
-import io.opendatahub.datasciencecluster.v1.datascienceclusterspec.components.CodeflareBuilder;
-import io.opendatahub.datasciencecluster.v1.datascienceclusterspec.components.Dashboard;
-import io.opendatahub.datasciencecluster.v1.datascienceclusterspec.components.DashboardBuilder;
-import io.opendatahub.datasciencecluster.v1.datascienceclusterspec.components.Datasciencepipelines;
-import io.opendatahub.datasciencecluster.v1.datascienceclusterspec.components.DatasciencepipelinesBuilder;
-import io.opendatahub.datasciencecluster.v1.datascienceclusterspec.components.Kserve;
-import io.opendatahub.datasciencecluster.v1.datascienceclusterspec.components.KserveBuilder;
-import io.opendatahub.datasciencecluster.v1.datascienceclusterspec.components.Kueue;
-import io.opendatahub.datasciencecluster.v1.datascienceclusterspec.components.KueueBuilder;
-import io.opendatahub.datasciencecluster.v1.datascienceclusterspec.components.Modelmeshserving;
-import io.opendatahub.datasciencecluster.v1.datascienceclusterspec.components.ModelmeshservingBuilder;
-import io.opendatahub.datasciencecluster.v1.datascienceclusterspec.components.Ray;
-import io.opendatahub.datasciencecluster.v1.datascienceclusterspec.components.RayBuilder;
-import io.opendatahub.datasciencecluster.v1.datascienceclusterspec.components.Workbenches;
-import io.opendatahub.datasciencecluster.v1.datascienceclusterspec.components.WorkbenchesBuilder;
+import io.opendatahub.datasciencecluster.v1.datascienceclusterspec.components.*;
 import io.opendatahub.dscinitialization.v1.DSCInitialization;
 import io.opendatahub.dscinitialization.v1.DSCInitializationBuilder;
 import io.opendatahub.dscinitialization.v1.dscinitializationspec.Monitoring;
@@ -55,7 +40,8 @@ public class DscUtils {
                 .endControlPlane()
                 .endServiceMesh()
                 .withNewTrustedCABundle()
-                .withManagementState(TrustedCABundle.ManagementState.Removed)
+                .withManagementState(TrustedCABundle.ManagementState.Managed)
+                .withCustomCABundle("")
                 .endTrustedCABundle()
                 .endSpec()
                 .build();
@@ -92,6 +78,15 @@ public class DscUtils {
                                 )
                                 .withRay(
                                         new RayBuilder().withManagementState(Ray.ManagementState.Managed).build()
+                                )
+                                .withTrustyai(
+                                        new TrustyaiBuilder().withManagementState(Trustyai.ManagementState.Managed).build()
+                                )
+                                .withTrainingoperator(
+                                        new TrainingoperatorBuilder().withManagementState(Trainingoperator.ManagementState.Managed).build()
+                                )
+                                .withModelregistry(
+                                        new ModelregistryBuilder().withManagementState(Modelregistry.ManagementState.Managed).build()
                                 )
                                 .build())
                 .endSpec()
