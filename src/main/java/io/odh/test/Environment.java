@@ -48,7 +48,7 @@ public class Environment {
     private static final String SKIP_INSTALL_OPERATOR_DEPS_ENV = "SKIP_INSTALL_OPERATOR_DEPS";
     private static final String SKIP_INSTALL_OPERATOR_ENV = "SKIP_INSTALL_OPERATOR";
     public static final String SKIP_DEPLOY_DSCI_DSC_ENV = "SKIP_DEPLOY_DSCI_DSC";
-    public static final String SKIP_DEPLOY_DASHBOARD_ENV = "SKIP_DEPLOY_DASHBOARD";
+    public static final String SKIP_DEPLOY_DSC_DASHBOARD_ENV = "SKIP_DEPLOY_DSC_DASHBOARD";
     public static final String DEFAULT_DSCI_NAME_ENV = "DEFAULT_DSCI_NAME";
 
     /**
@@ -82,7 +82,7 @@ public class Environment {
     public static final boolean SKIP_INSTALL_OPERATOR = getOrDefault(SKIP_INSTALL_OPERATOR_ENV, Boolean::valueOf, false);
     public static final boolean SKIP_DEPLOY_DSCI_DSC = getOrDefault(SKIP_DEPLOY_DSCI_DSC_ENV, Boolean::valueOf, false);
     // dashboard is not needed for component api tests but it's useful to enable it for debugging
-    public static final boolean SKIP_DEPLOY_DASHBOARD = getOrDefault(SKIP_DEPLOY_DASHBOARD_ENV, Boolean::valueOf, true);
+    public static final boolean SKIP_DEPLOY_DSC_DASHBOARD = getOrDefault(SKIP_DEPLOY_DSC_DASHBOARD_ENV, Boolean::valueOf, true);
     public static final String DEFAULT_DSCI_NAME = getOrDefault(DEFAULT_DSCI_NAME_ENV, String::valueOf, OdhConstants.DEFAULT_DSCI_NAME);
 
     // YAML Bundle

@@ -109,7 +109,7 @@ public class DistributedST extends StandardAbstract {
                 .withComponents(
                         new ComponentsBuilder()
                                 .withDashboard(
-                                        new DashboardBuilder().withManagementState(Environment.SKIP_DEPLOY_DASHBOARD ? Dashboard.ManagementState.Removed : Dashboard.ManagementState.Managed).build()
+                                        new DashboardBuilder().withManagementState(Environment.SKIP_DEPLOY_DSC_DASHBOARD ? Dashboard.ManagementState.Removed : Dashboard.ManagementState.Managed).build()
                                 )
                                 .withKueue(
                                         new KueueBuilder().withManagementState(Kueue.ManagementState.Managed).build()

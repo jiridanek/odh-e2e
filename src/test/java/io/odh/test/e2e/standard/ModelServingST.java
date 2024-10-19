@@ -118,7 +118,7 @@ public class ModelServingST extends StandardAbstract {
                 .withComponents(
                         new ComponentsBuilder()
                                 .withDashboard(
-                                        new DashboardBuilder().withManagementState(Environment.SKIP_DEPLOY_DASHBOARD ? Dashboard.ManagementState.Removed : Dashboard.ManagementState.Managed).build()
+                                        new DashboardBuilder().withManagementState(Environment.SKIP_DEPLOY_DSC_DASHBOARD ? Dashboard.ManagementState.Removed : Dashboard.ManagementState.Managed).build()
                                 )
                                 .withKserve(
                                         new KserveBuilder().withManagementState(Kserve.ManagementState.Managed).build()

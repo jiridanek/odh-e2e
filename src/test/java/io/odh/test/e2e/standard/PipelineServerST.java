@@ -96,7 +96,7 @@ public class PipelineServerST extends StandardAbstract {
                 .withComponents(
                         new ComponentsBuilder()
                                 .withDashboard(
-                                        new DashboardBuilder().withManagementState(Environment.SKIP_DEPLOY_DASHBOARD ? Dashboard.ManagementState.Removed : Dashboard.ManagementState.Managed).build()
+                                        new DashboardBuilder().withManagementState(Environment.SKIP_DEPLOY_DSC_DASHBOARD ? Dashboard.ManagementState.Removed : Dashboard.ManagementState.Managed).build()
                                 )
                                 .withDatasciencepipelines(
                                         new DatasciencepipelinesBuilder().withManagementState(Datasciencepipelines.ManagementState.Managed).build()

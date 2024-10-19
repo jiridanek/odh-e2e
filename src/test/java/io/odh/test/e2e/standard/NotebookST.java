@@ -133,7 +133,7 @@ public class NotebookST extends StandardAbstract {
                             new WorkbenchesBuilder().withManagementState(Workbenches.ManagementState.Managed).build()
                         )
                         .withDashboard(
-                            new DashboardBuilder().withManagementState(Environment.SKIP_DEPLOY_DASHBOARD ? Dashboard.ManagementState.Removed : Dashboard.ManagementState.Managed).build()
+                            new DashboardBuilder().withManagementState(Environment.SKIP_DEPLOY_DSC_DASHBOARD ? Dashboard.ManagementState.Removed : Dashboard.ManagementState.Managed).build()
                         )
                         .build())
                 .endSpec()
