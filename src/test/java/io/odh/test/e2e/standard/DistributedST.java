@@ -26,6 +26,7 @@ import io.odh.test.TestUtils;
 import io.odh.test.install.InstallTypes;
 import io.odh.test.platform.RayClient;
 import io.odh.test.platform.TlsUtils;
+import io.odh.test.platform.httpClient.OAuthToken;
 import io.odh.test.utils.CsvUtils;
 import io.odh.test.utils.DscUtils;
 import io.opendatahub.datasciencecluster.v1.DataScienceCluster;
@@ -197,44 +198,8 @@ public class DistributedST extends StandardAbstract {
         final String clusterQueueName = "cluster-queue";
         final String localQueueName = "local-queue";
 
-        // https://github.com/openshift/cluster-authentication-operator/blob/master/test/library/client.go#L35-L44
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        String sha256Prefix = "sha256~";
-        String randomToken = "nottoorandom%d".formatted(new Random().nextInt());
-        byte[] hashed = digest.digest(randomToken.getBytes(StandardCharsets.UTF_8));
-        String privateToken = sha256Prefix + randomToken;
-        String publicToken = sha256Prefix + Base64.getUrlEncoder().withoutPadding().encodeToString(hashed);
-
-        String oauthToken = Allure.step("Create OAuth Token", () -> {
-            User user = kubeClient.users().withName("kubeadmin").get();
-
-            final String oauthClientName = "oauth-client";
-            OAuthClient client = new OAuthClientBuilder()
-                    .withNewMetadata()
-                    .withName(oauthClientName)
-                    .endMetadata()
-                    .withSecret("the-secret-for-oauth-client")
-                    .withRedirectURIs("https://localhost")
-                    .withGrantMethod("auto")
-                    .withAccessTokenInactivityTimeoutSeconds(300)
-                    .build();
-            KubeResourceManager.getInstance().createResourceWithoutWait(client);
-
-            OAuthAccessToken token = new OAuthAccessTokenBuilder()
-                    .withNewMetadata()
-                    .withName(publicToken)
-                    .endMetadata()
-                    .withExpiresIn(86400L)
-                    .withScopes("user:full")
-                    .withRedirectURI("https://ray-dashboard-koranteng-test-codeflare.apps-crc.testing/oauth/callback")
-                    .withClientName(oauthClientName)
-                    .withUserName(user.getMetadata().getName())
-                    .withUserUID(user.getMetadata().getUid())
-                    .build();
-            KubeResourceManager.getInstance().createResourceWithWait(token);
-
-            return privateToken;
-        });
+        String redirectUrl = "https://ray-dashboard-koranteng-test-codeflare.apps-crc.testing/oauth/callback";
+        String oauthToken = Allure.step("Create OAuth Token", () -> new OAuthToken().getToken(redirectUrl));
 
         Allure.step("Setup resources", () -> {
             Allure.step("Create namespace", () -> {
